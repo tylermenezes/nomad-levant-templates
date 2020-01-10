@@ -27,7 +27,7 @@ tasks:                          # the specific tasks to run
 
     resources:                  # (optional) limits to apply to the container. default limits applied even if unset.
       cpu: 100                  #   - (optional, default 100) cpu to reserve (in MHz). burstable if resources permit.
-      memory: 300               #   - (optional, default 300) ram to reserve (in MiB). not burstable.
+      memory: 256               #   - (optional, default 300) ram to reserve (in MiB). not burstable.
 
     env:                        # (optional) static ENV to pass to the container
       ENABLE: "true"            #   - ENV: value. supports interpolation from nomad agent.

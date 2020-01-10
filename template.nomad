@@ -134,6 +134,9 @@ job "[[ .job ]]" {
         [[ end ]]
 
         resources {
+          cpu = [[ if .resources ]][[ or .resources.cpu 100 ]][[ else ]]100[[ end ]]
+          memory = [[ if .resources ]][[ or .resources.memory 256 ]][[ else ]]256[[ end ]]
+
           # External Port Mapping
           network {
             [[ range $name, $port := .ports ]]
