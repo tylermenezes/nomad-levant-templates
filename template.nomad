@@ -1,12 +1,8 @@
 job "[[ .job ]]" {
   region      = "[[ or .region "global" ]]"
   datacenters = [
-    [[ if .datacenters ]]
-      [[ range $index, $value := .datacenters ]]
-        [[ if ne $index 0 ]], [[ end ]]"[[ $value ]]"
-      [[ end ]]
-    [[ else ]]
-      "srnd"
+    [[ range $index, $value := .datacenters ]]
+    [[ if ne $index 0 ]], [[ end ]]"[[ $value ]]"
     [[ end ]]
   ]
 
@@ -131,7 +127,7 @@ job "[[ .job ]]" {
           [[ range $index, $config := .volumes.host ]]
             volume_mount {
               volume = "[[ $taskName ]]-[[ .volume ]]"
-              mount = "[[ .mountpoint ]]"
+              destination = "[[ .mountpoint ]]"
               read_only = [[ if .read_only ]]true[[ else ]]false[[ end ]]
             }
           [[ end ]]
@@ -205,7 +201,7 @@ EOF
         # Consul Service Registration
         [[ range $portName, $port := .ports ]]
           service {
-            name = "[[ $portName ]]"
+            name = "[[ if eq $.job $taskName ]][[ $taskName ]][[ else ]][[ $.job ]]-[[ $taskName ]][[ end ]][[ if not (eq $taskName $portName) ]]-[[ $portName ]][[ end ]]"
             port = "[[ $portName ]]"
             tags = [
               [[ if .lb ]]

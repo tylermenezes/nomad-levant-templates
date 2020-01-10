@@ -3,9 +3,9 @@
 # 2. Connect to the VPN
 # 3. Run `levant [plan|deploy] -address=http://m.srnd.cloud:4646 -var-file=[YOUR YML FILE NAME] template.nomad`
 
-job: foobar                     # the name of the job.
+job: foo                        # the name of the job.
 region: global                  # (optional, default global) server region the tasks will run on.
-datacenters: [ srnd ]           # (optional, default [srnd]) server group the tasks will run on.
+datacenters: [ mydc ]           # server group(s) the tasks will run on.
 
 placement:                      # (optional) controls which nodes that tasks will run on.
   type: 'default'               #   - (optional) "default", "unique", "all", or "batch" (for short-lived tasks).
@@ -55,7 +55,7 @@ tasks:                          # the specific tasks to run
           foo
 
     ports:                      # (optional) ports to expose. no other ports will be available outside the container.
-      http:                     #   - port name. will be used for service name.
+      foo:                      #   - port name. will be used in service name as [job]-[task]-[port] (dupes condensed).
         inner: 8080             #     - port value exposed in the container.
         outer: 80               #     - (optional, default is random > 1024) port accessible from other services.
         lb:                     #     - (optional) exposes an HTTP service on the loadbalancer
