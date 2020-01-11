@@ -115,21 +115,25 @@ job "[[ .job ]]" {
               [[ range $index, $config := .volumes.share ]]
                 [[ if ne $index 0 ]],[[ end ]] "/fileshare/[[ .fileshare ]]:[[ .mountpoint ]]"
               [[ end ]]
-              [[ if (or .allow_docker_sock .volumes.tmpfs) ]],[[ end ]]
+              [[ if .allow_docker_sock ]],[[ end ]]
             [[ end ]]
             [[ if .allow_docker_sock ]]
               "/var/run/docker.sock:/var/run/docker.sock"
-              [[ if .volumes.tmpfs ]],[[ end ]]
-            [[ end ]]
-            [[ range $index, $target := .volumes.tmpfs ]]
-                [[ if ne $index 0]],[[ end ]]
-                {
-                    type = "tmpfs"
-                    target = "[[ $target ]]"
-                    readonly = false
-                }
             [[ end ]]
           ]
+
+          [[ if .volumes ]]
+            mounts = [
+              [[ range $index, $target := .volumes.tmpfs ]]
+                  [[ if ne $index 0]],[[ end ]]
+                  {
+                      type = "tmpfs"
+                      target = "[[ $target ]]"
+                      readonly = false
+                  }
+              [[ end ]]
+            ]
+          [[ end ]]
         }
 
         [[ if .volumes ]]
