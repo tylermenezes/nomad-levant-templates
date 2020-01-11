@@ -102,7 +102,7 @@ job "[[ .job ]]" {
         config {
           dns_servers = [ "169.254.1.1" ]
           image = "[[ .image ]]:[[ or .version "latest" ]]"
-          [[ if .command ]]command = [[ .command ]][[ end ]]
+          [[ if .command ]]command = "[[ .command ]]"[[ end ]]
           [[ if .allow_docker_sock ]]userns_mode = "host"[[ end ]]
 
           # Docker Ports
