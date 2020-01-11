@@ -24,6 +24,7 @@ tasks:                          # the specific tasks to run
   foo:                          # name of each task
     image: 'foo'                # docker image (or URL) to load, without version
     version: 1.0.0              # TODO: move this to consul
+    command: hello              # (optional) command to run in docker
 
     resources:                  # (optional) limits to apply to the container. default limits applied even if unset.
       cpu: 100                  #   - (optional, default 100) cpu to reserve (in MHz). burstable if resources permit.
