@@ -47,6 +47,8 @@ tasks:                          # the specific tasks to run
         - volume: foo           #     - nomad host volume name. must be added to host_volumes above.
           mountpoint: "/foo"    #     - container mountpoint.
           read_only: false      #     - (optional, default false)
+      tmpfs:                    #   - deleted on close.
+        - "/var/uploads"        #     - container mountpoint.
 
     files:                      # (optional) add files to the container.
       "/foo.txt":               #   - file name.
