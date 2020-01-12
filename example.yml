@@ -64,5 +64,12 @@ tasks:                          # the specific tasks to run
         lb:                     #     - (optional) exposes an HTTP service on the loadbalancer
           domain: foo.srnd.org  #       - domain name to proxy. dns must be configured separately.
           cert: srnd.org        #       - certificate name, must be a base domain name registered in Traefik.
+          https_only: true      #       - if true, will redirect to https (requires Traefik middleware)
+        tags:                   #     - (optional) list of additional tags to add to the service in consul
+          - "foo"
 
+    capacities:                 # (optional) capacities to add to the container
+      - NET_ADMIN
+
+    host_network: true          # (optional, default false) if set binds the host network, instead of bridge/nat.
     allow_docker_sock: false    # (optional, default false) allows the container root access to the docker daemon.

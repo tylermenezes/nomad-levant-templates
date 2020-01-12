@@ -112,12 +112,24 @@ job "[[ .job ]]" {
             [[ end ]]
           }
 
+          [[ if .capacities ]]
+            cap_add = [
+              [[ range $index, $cap := .capacities ]]
+                [[ if ne $index 0 ]],[[ end ]] "[[ $cap ]]"
+              [[ end ]]
+            ]
+          [[ end ]]
+
           volumes = [
             [[ if .volumes ]]
               [[ range $index, $config := .volumes.share ]]
                 [[ if ne $index 0 ]],[[ end ]] "/fileshare/[[ .fileshare ]]:[[ .mountpoint ]]"
+                [[ if $task.volumes.raw ]],[[ end ]]
               [[ end ]]
-              [[ if .allow_docker_sock ]],[[ end ]]
+              [[ range $index, $config := .volumes.raw ]]
+                [[ if ne $index 0 ]],[[ end ]] "[[ .from ]]:[[ .mountpoint ]]"
+              [[ end ]]
+              [[ if and .allow_docker_sock (or .volumes.raw .volumes.share) ]],[[ end ]]
             [[ end ]]
             [[ if .allow_docker_sock ]]
               "/var/run/docker.sock:/var/run/docker.sock"
@@ -154,6 +166,7 @@ job "[[ .job ]]" {
 
           # External Port Mapping
           network {
+            [[ if .host_network ]]mode = "host"[[ end ]]
             [[ range $name, $port := .ports ]]
               port "[[ $name ]]" {
                 [[ if .outer ]]
@@ -222,15 +235,27 @@ EOF
             name = "[[ if eq $.job $taskName ]][[ $taskName ]][[ else ]][[ $.job ]]-[[ $taskName ]][[ end ]][[ if not (eq $taskName $portName) ]]-[[ $portName ]][[ end ]]"
             port = "[[ $portName ]]"
             tags = [
+	      [[ range $index, $tag := .tags ]]
+                [[ if ne $index 0 ]],[[ end ]] "[[ $tag ]]"
+              [[ end ]]
+              [[ if and .tags .lb ]],[[ end ]]
               [[ if .lb ]]
                 "traefik.enable=true",
-                "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].rule=Host(`[[ .lb.domain ]]`)",
-                "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.rule=Host(`[[ .lb.domain ]]`)",
-                "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls=true",
-                "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls.certresolver=[[ replace .lb.cert "." "-" ]]",
-                "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls.domains[0].main=*.[[ .lb.cert ]]",
-                "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls.domains[0].sans=[[ .lb.cert ]]",
-                "traefik.http.services.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].loadbalancer.sticky=false",
+                "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].rule=Host(`[[ .lb.domain ]]`)"
+                [[ if .lb.https_only ]]
+                  ,"traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].middlewares=redirect-scheme@file"
+                [[ else ]]
+                  [[ if .lb.middleware ]],"traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].middlewares=[[ range $index, $middleware := .lb.middleware ]][[ if ne $index 0 ]],[[ end ]][[ $middleware ]][[ end ]]"[[ end ]]
+                [[ end ]]
+                [[ if .lb.cert ]],
+			[[ if .lb.middleware ]]"traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.middlewares=[[ range $index, $middleware := .lb.middleware ]][[ if ne $index 0 ]],[[ end ]][[ $middleware ]][[ end ]]",[[ end ]]
+                  "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.rule=Host(`[[ .lb.domain ]]`)",
+                  "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls=true",
+                  "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls.certresolver=[[ replace .lb.cert "." "-" ]]",
+                  "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls.domains[0].main=*.[[ .lb.cert ]]",
+                  "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls.domains[0].sans=[[ .lb.cert ]]",
+                  "traefik.http.services.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].loadbalancer.sticky=false"
+                [[ end ]]
               [[ end ]]
             ]
           }
