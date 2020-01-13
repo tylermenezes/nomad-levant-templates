@@ -61,6 +61,7 @@ tasks:                          # the specific tasks to run
       foo:                      #   - port name. will be used in service name as [job]-[task]-[port] (dupes condensed).
         inner: 8080             #     - port value exposed in the container.
         outer: 80               #     - (optional, default is random > 1024) port accessible from other services.
+        scheme: http            #     - (optional, default is http) scheme services should use to connect.
         lb:                     #     - (optional) exposes an HTTP service on the loadbalancer
           domain: foo.srnd.org  #       - domain name to proxy. dns must be configured separately.
           cert: srnd.org        #       - certificate name, must be a base domain name registered in Traefik.

@@ -235,20 +235,23 @@ EOF
             name = "[[ if eq $.job $taskName ]][[ $taskName ]][[ else ]][[ $.job ]]-[[ $taskName ]][[ end ]][[ if not (eq $taskName $portName) ]]-[[ $portName ]][[ end ]]"
             port = "[[ $portName ]]"
             tags = [
+              "scheme=[[ or .scheme "http" ]]"
 	      [[ range $index, $tag := .tags ]]
-                [[ if ne $index 0 ]],[[ end ]] "[[ $tag ]]"
+                ,"[[ $tag ]]"
               [[ end ]]
-              [[ if and .tags .lb ]],[[ end ]]
               [[ if .lb ]]
-                "traefik.enable=true",
+                ,"traefik.enable=true",
                 "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].rule=Host(`[[ .lb.domain ]]`)"
+                [[ if .scheme ]][[ if eq .scheme "https" ]]
+                  ,"traefik.http.services.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].loadbalancer.server.scheme=https"
+                [[ end ]][[ end ]]
                 [[ if .lb.https_only ]]
                   ,"traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].middlewares=redirect-scheme@file"
                 [[ else ]]
                   [[ if .lb.middleware ]],"traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].middlewares=[[ range $index, $middleware := .lb.middleware ]][[ if ne $index 0 ]],[[ end ]][[ $middleware ]][[ end ]]"[[ end ]]
                 [[ end ]]
                 [[ if .lb.cert ]],
-			[[ if .lb.middleware ]]"traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.middlewares=[[ range $index, $middleware := .lb.middleware ]][[ if ne $index 0 ]],[[ end ]][[ $middleware ]][[ end ]]",[[ end ]]
+		  [[ if .lb.middleware ]]"traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.middlewares=[[ range $index, $middleware := .lb.middleware ]][[ if ne $index 0 ]],[[ end ]][[ $middleware ]][[ end ]]",[[ end ]]
                   "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.rule=Host(`[[ .lb.domain ]]`)",
                   "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls=true",
                   "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls.certresolver=[[ replace .lb.cert "." "-" ]]",
