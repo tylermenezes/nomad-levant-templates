@@ -104,6 +104,13 @@ job "[[ .job ]]" {
           image = "[[ .image ]]:[[ or .version "latest" ]]"
           [[ if .command ]]command = "[[ .command ]]"[[ end ]]
           [[ if .allow_docker_sock ]]userns_mode = "host"[[ end ]]
+          [[ if .args ]]
+            args = [
+              [[ range $index, $arg := .args ]]
+                [[ if ne $index 0 ]],[[ end ]] "[[ $arg ]]"
+              [[ end ]]
+            ]
+          [[ end ]]
 
           # Docker Ports
           port_map = {
@@ -256,8 +263,13 @@ EOF
                   "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls=true",
                   "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls.certresolver=[[ replace .lb.cert "." "-" ]]",
                   "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls.domains[0].main=*.[[ .lb.cert ]]",
-                  "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls.domains[0].sans=[[ .lb.cert ]]",
-                  "traefik.http.services.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].loadbalancer.sticky=false"
+                  "traefik.http.routers.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]-tls.tls.domains[0].sans=[[ .lb.cert ]]"
+                  [[ if .lb.sticky ]],
+                  "traefik.http.services.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].loadBalancer.sticky=true",
+                  "traefik.http.services.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].loadBalancer.sticky.cookie.name=[[ $.job ]]-[[ $taskName ]]-[[ $portName ]]",
+                  "traefik.http.services.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].loadBalancer.sticky.cookie.secure=false",
+                  "traefik.http.services.[[ $.job ]]-[[ $taskName ]]-[[ $portName ]].loadBalancer.sticky.cookie.httpOnly=true"
+                  [[ end ]]
                 [[ end ]]
               [[ end ]]
             ]
