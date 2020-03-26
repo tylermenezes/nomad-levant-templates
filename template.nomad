@@ -60,15 +60,33 @@ job "[[ .job ]]" {
   # Deployment Options
   ##########
 
-  [[ if or ( not ( and .placement .placement.type ) ) ( eq .placement.type "service" ) ]]
+  [[ if .placement ]]
+    [[ if eq .placement.type "service" ]]
+      update {
+        max_parallel = [[ if .deployment ]][[ or .deployment.max_parallel 1 ]][[ else ]]1[[ end ]]
+
+        health_check = "task_states"
+        healthy_deadline = [[ if .deployment ]]"[[ or .deployment.healthy_deadline "3m" ]]"[[ else ]]"3m"[[ end ]]
+        min_healthy_time = "10s"
+        progress_deadline = "10m"
+
+        canary = [[ if .deployment ]][[ or .deployment.canaries 1 ]][[ else ]]1[[ end ]]
+        auto_promote = true
+        auto_revert = [[ if .deployment ]][[ if .deployment.no_revert_on_failure ]]false[[ else ]]true[[ end ]][[ else ]]true[[ end ]]
+      }
+    [[ end ]]
+  [[ else ]]
     update {
       max_parallel = [[ if .deployment ]][[ or .deployment.max_parallel 1 ]][[ else ]]1[[ end ]]
-      min_healthy_time = "10s"
+
+      health_check = "task_states"
       healthy_deadline = [[ if .deployment ]]"[[ or .deployment.healthy_deadline "3m" ]]"[[ else ]]"3m"[[ end ]]
+      min_healthy_time = "10s"
       progress_deadline = "10m"
+
+      canary = [[ if .deployment ]][[ or .deployment.canaries 1 ]][[ else ]]1[[ end ]]
+      auto_promote = true
       auto_revert = [[ if .deployment ]][[ if .deployment.no_revert_on_failure ]]false[[ else ]]true[[ end ]][[ else ]]true[[ end ]]
-      canary = [[ if .deployment ]][[ or .deployment.canaries 0 ]][[ else ]]0[[ end ]]
-      auto_promote = [[ if .deployment ]][[ if gt .deployment.canaries 0 ]]true[[ else ]]false[[ end ]][[ else ]]false[[ end ]]
     }
   [[ end ]]
 
@@ -265,6 +283,9 @@ EOF
           service {
             name = "[[ if eq $.job $taskName ]][[ $taskName ]][[ else ]][[ $.job ]]-[[ $taskName ]][[ end ]][[ if not (eq $taskName $portName) ]]-[[ $portName ]][[ end ]]"
             port = "[[ $portName ]]"
+            canary_tags = [
+              "traefik.enable=false"
+            ]
             tags = [
               "scheme=[[ or .scheme "http" ]]"
 	      [[ range $index, $tag := .tags ]]
