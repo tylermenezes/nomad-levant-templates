@@ -25,6 +25,12 @@ job "[[ .job ]]" {
       [[ end ]]
     [[ end ]]
 
+    [[ if and (and (and .placement .placement.type) (eq .placement.type "batch")) .placement.crontab ]]
+      periodic {
+        cron = "[[ .placement.crontab ]]"
+      }
+    [[ end ]]
+
     [[ if .placement.os_type ]]
       constraint {
         attribute = "${attr.kernel.name}"
@@ -54,15 +60,17 @@ job "[[ .job ]]" {
   # Deployment Options
   ##########
 
-  update {
-    max_parallel = [[ if .deployment ]][[ or .deployment.max_parallel 1 ]][[ else ]]1[[ end ]]
-    min_healthy_time = "10s"
-    healthy_deadline = [[ if .deployment ]]"[[ or .deployment.healthy_deadline "3m" ]]"[[ else ]]"3m"[[ end ]]
-    progress_deadline = "10m"
-    auto_revert = [[ if .deployment ]][[ if .deployment.no_revert_on_failure ]]false[[ else ]]true[[ end ]][[ else ]]true[[ end ]]
-    canary = [[ if .deployment ]][[ or .deployment.canaries 0 ]][[ else ]]0[[ end ]]
-    auto_promote = [[ if .deployment ]][[ if gt .deployment.canaries 0 ]]true[[ else ]]false[[ end ]][[ else ]]false[[ end ]]
-  }
+  [[ if or ( not ( and .placement .placement.type ) ) ( eq .placement.type "service" ) ]]
+    update {
+      max_parallel = [[ if .deployment ]][[ or .deployment.max_parallel 1 ]][[ else ]]1[[ end ]]
+      min_healthy_time = "10s"
+      healthy_deadline = [[ if .deployment ]]"[[ or .deployment.healthy_deadline "3m" ]]"[[ else ]]"3m"[[ end ]]
+      progress_deadline = "10m"
+      auto_revert = [[ if .deployment ]][[ if .deployment.no_revert_on_failure ]]false[[ else ]]true[[ end ]][[ else ]]true[[ end ]]
+      canary = [[ if .deployment ]][[ or .deployment.canaries 0 ]][[ else ]]0[[ end ]]
+      auto_promote = [[ if .deployment ]][[ if gt .deployment.canaries 0 ]]true[[ else ]]false[[ end ]][[ else ]]false[[ end ]]
+    }
+  [[ end ]]
 
 
   group "[[ .job ]]" {
@@ -212,6 +220,22 @@ job "[[ .job ]]" {
               destination = "local/secrets.env"
               env         = true
             }
+          [[ end ]]
+
+          [[ if .vault.files ]]
+            [[ range $vaultKey, $vaultFiles := .vault.files ]]
+              [[ range $fileName, $fileInfo := $vaultFiles ]]
+                template {
+                  data = <<EOF
+                    {{- with secret "kv/data/[[ $vaultKey ]]" -}}
+                      [[ $fileInfo.contents ]]
+                    {{ end }}
+                  EOF
+                  destination = "local/[[ $fileName ]]"
+                  env         = [[ if $fileInfo.env ]]true[[ else ]]false[[ end ]]
+                }
+              [[ end ]]
+            [[ end ]]
           [[ end ]]
         [[ end ]]
 

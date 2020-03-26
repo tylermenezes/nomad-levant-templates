@@ -9,6 +9,7 @@ datacenters: [ mydc ]           # server group(s) the tasks will run on.
 
 placement:                      # (optional) controls which nodes that tasks will run on.
   type: 'default'               #   - (optional) "default", "unique", "all", or "batch" (for short-lived tasks).
+  crontab: '* * * * *'          #   - (optional) for batch jobs, when to run the job (if any)
   os_type: 'linux'              #   - (optional, none applied if unset)
   os: 'ubuntu'                  #   - (optional, none applied if unset)
   os_version: '19.04'           #   - (optional, none applied if unset)
@@ -39,6 +40,13 @@ tasks:                          # the specific tasks to run
       env:                      #   - optional. allows setting env variables from vault.
         foo:                    #     - key under which secrets are stored in vault (under /kv)
           ADMIN: admin_pass     #     - ENV: vault_key
+      files:                    #   - optional. allows setting env files from vault.
+        bar:                    #     - key under which secrets are stored in vault (under /kv)
+          android_secret.json:  #     - filename, (under /local)
+            env: false
+            contents: |
+              {"secret": "{{ .Data.data.foo }}"}
+
 
     volumes:                    # (optional) volumes to mount.
       share:                    #   - shared between all agents. slow, and must not be frequently read.
@@ -48,6 +56,9 @@ tasks:                          # the specific tasks to run
         - volume: foo           #     - nomad host volume name. must be added to host_volumes above.
           mountpoint: "/foo"    #     - container mountpoint.
           read_only: false      #     - (optional, default false)
+      raw:                      #   - raw mount from the fs.
+        - from: "/foo"          #     - path on the host filesystem
+          mountpoint: "/foo"    #     - path in the docker container
       tmpfs:                    #   - deleted on close.
         - "/var/uploads"        #     - container mountpoint.
 
