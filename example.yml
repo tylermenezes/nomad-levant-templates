@@ -59,6 +59,9 @@ tasks:                          # the specific tasks to run
       raw:                      #   - raw mount from the fs.
         - from: "/foo"          #     - path on the host filesystem
           mountpoint: "/foo"    #     - path in the docker container
+      artifact:                 #   - download and unpack an artifact.
+        - source: "http://"     #     - the URL to download from.
+          destination: "/foo"   #     - the path to unpack.
       tmpfs:                    #   - deleted on close.
         - "/var/uploads"        #     - container mountpoint.
 

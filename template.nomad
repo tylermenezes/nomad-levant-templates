@@ -193,6 +193,15 @@ job "[[ .job ]]" {
           [[ end ]]
         [[ end ]]
 
+        [[ if .volumes ]]
+          [[ range $index, $config := .volumes.artifact ]]
+            artifact {
+              source = "[[ .source ]]"
+              destination = "[[ .destination ]]"
+            }
+          [[ end ]]
+        [[ end ]]
+
         resources {
           cpu = [[ if .resources ]][[ or .resources.cpu 100 ]][[ else ]]100[[ end ]]
           memory = [[ if .resources ]][[ or .resources.memory 256 ]][[ else ]]256[[ end ]]
